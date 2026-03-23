@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STASIS PRO — Deep Focus System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       STASIS PRO — DESIGN SYSTEM
+       Palette: Midnight Espresso · Forest Emerald · Glass
+       Typography: Space Grotesk (UI) + Geist Mono (terminal/timer)
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg-base:          #0A0A0B;
+      --bg-surface:       #0e0e0f;
+      --bg-elevated:      #131314;
+      --glass:            rgba(255,255,255,0.03);
+      --glass-hover:      rgba(255,255,255,0.055);
+      --glass-active:     rgba(34,197,94,0.07);
+
+      --border-subtle:    rgba(255,255,255,0.06);
+      --border-default:   rgba(255,255,255,0.10);
+      --border-strong:    rgba(255,255,255,0.16);
+      --border-accent:    rgba(34,197,94,0.30);
+
+      --text-primary:     rgba(255,255,255,0.92);
+      --text-secondary:   rgba(255,255,255,0.50);
+      --text-muted:       rgba(255,255,255,0.26);
+      --text-accent:      #22C55E;
+      --text-inverse:     #0A0A0B;
+
+      --accent:           #22C55E;
+      --accent-dim:       rgba(34,197,94,0.11);
+      --accent-glow:      rgba(34,197,94,0.22);
+      --accent-hover:     #1db352;
+
+      --warn:             #F59E0B;
+      --error:            #EF4444;
+      --info:             #60A5FA;
+
+      --radius-panel:     32px;
+      --radius-card:      20px;
+      --radius-item:      12px;
+      --radius-btn:       10px;
+      --radius-pill:      999px;
+
+      --sidebar-w:        320px;
+      --console-h:        206px;
+      --header-h:         50px;
+
+      --ease-smooth:      cubic-bezier(0.16,1,0.3,1);
+      --ease-spring:      cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    html, body { height:100%; overflow:hidden; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-size: 13.5px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font-family:inherit; cursor:pointer; border:none; outline:none; background:none; }
+    input  { font-family:inherit; outline:none; border:none; background:none; color:inherit; }
+    input::placeholder { color: var(--text-muted); }
+
+    ::-webkit-scrollbar { width:3px; height:3px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
+
+    /* ─── UNLOCK OVERLAY ───────────────────────────────────────── */
+    #unlock-overlay {
+      position:fixed; inset:0; z-index:9999;
+      background: var(--bg-base);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      transition: opacity 0.5s var(--ease-smooth);
+    }
+    #unlock-overlay.fade-out { opacity:0; pointer-events:none; }
+
+    .unlock-mark {
+      width:54px; height:54px; border-radius:16px;
+      background:var(--accent-dim); border:1px solid var(--border-accent);
+      display:flex; align-items:center; justify-content:center; margin-bottom:28px;
+    }
+
+    .unlock-eyebrow {
+      font-size:11px; font-weight:600; letter-spacing:0.2em;
+      text-transform:uppercase; color:var(--text-muted); margin-bottom:12px;
+    }
+
+    .unlock-title {
+      font-size: clamp(40px,6vw,64px);
+      font-weight:700; letter-spacing:-0.03em;
+      color:var(--text-primary); margin-bottom:12px; text-align:center;
+    }
+    .unlock-title em { color:var(--accent); font-style:normal; }
+
+    .unlock-sub {
+      font-size:14px; color:var(--text-secondary); text-align:center;
+      max-width:330px; line-height:1.7; margin-bottom:38px;
+    }
+
+    .unlock-btn {
+      display:flex; align-items:center; gap:9px;
+      padding:13px 28px; background:var(--accent); color:var(--text-inverse);
+      font-size:14px; font-weight:600; border-radius:var(--radius-pill);
+      transition: background 0.18s, transform 0.2s var(--ease-spring), box-shadow 0.2s;
+    }
+    .unlock-btn:hover {
+      background:var(--accent-hover);
+      transform:translateY(-2px); box-shadow:0 8px 32px var(--accent-glow);
+    }
+    .unlock-btn:active { transform:translateY(0); }
+
+    .unlock-note {
+      margin-top:18px; font-size:11.5px; color:var(--text-muted);
+      display:flex; align-items:center; gap:6px;
+    }
+
+    /* ─── APP SHELL ─────────────────────────────────────────────── */
+    #app {
+      display:grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: 1fr var(--console-h);
+      height:100dvh; width:100vw;
+    }
+
+    /* ─── SIDEBAR ───────────────────────────────────────────────── */
+    #sidebar {
+      grid-column:1; grid-row:1/3;
+      display:flex; flex-direction:column;
+      border-right:1px solid var(--border-subtle);
+      background:var(--bg-surface); overflow:hidden;
+    }
+
+    .sb-head {
+      display:flex; align-items:center; gap:9px;
+      padding:17px 18px 15px;
+      border-bottom:1px solid var(--border-subtle);
+      flex-shrink:0;
+    }
+    .sb-led {
+      width:7px; height:7px; border-radius:50%; background:var(--accent);
+      box-shadow:0 0 8px var(--accent-glow);
+      animation: breathe 3s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%,100%{opacity:1;transform:scale(1);}
+      50%{opacity:0.45;transform:scale(0.75);}
+    }
+    .sb-brand { font-size:11.5px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-secondary); }
+    .sb-ver   { margin-left:auto; font-size:10px; font-family:'Geist Mono',monospace; color:var(--text-muted); }
+
+    .sb-body {
+      display:flex; flex-direction:column; flex:1;
+      overflow-y:auto; padding:14px 12px; gap:10px;
+    }
+
+    /* Panel card */
+    .panel {
+      background:var(--glass); border:1px solid var(--border-default);
+      border-radius:var(--radius-panel); overflow:hidden;
+    }
+    .panel-head {
+      display:flex; align-items:center; gap:8px;
+      padding:13px 15px 11px; border-bottom:1px solid var(--border-subtle);
+    }
+    .panel-ico { font-size:14px; }
+    .panel-lbl { font-size:10.5px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); }
+    .panel-badge {
+      margin-left:auto; font-size:10px; font-family:'Geist Mono',monospace;
+      padding:2px 8px; border-radius:var(--radius-pill);
+      background:var(--glass); border:1px solid var(--border-subtle); color:var(--text-muted);
+    }
+
+    /* Mode chips */
+    .mode-chips { display:flex; flex-wrap:wrap; gap:6px; padding:12px 14px; }
+    .mode-chip {
+      display:flex; align-items:center; gap:5px;
+      padding:6px 13px; border-radius:var(--radius-pill);
+      border:1px solid var(--border-default); background:var(--glass);
+      font-size:12px; font-weight:500; color:var(--text-secondary);
+      transition: all 0.16s var(--ease-smooth);
+    }
+    .mode-chip:hover { border-color:var(--border-strong); color:var(--text-primary); background:var(--glass-hover); }
+    .mode-chip.active { background:var(--glass-active); border-color:var(--border-accent); color:var(--accent); }
+    .chip-dot { width:5px; height:5px; border-radius:50%; background:currentColor; opacity:0.6; }
+
+    /* Env mixer */
+    .env-body { padding:14px 15px; display:flex; flex-direction:column; gap:18px; }
+    .env-track { display:flex; flex-direction:column; gap:9px; }
+    .env-row { display:flex; align-items:center; justify-content:space-between; }
+    .env-info { display:flex; align-items:center; gap:9px; }
+    .env-ico {
+      width:30px; height:30px; border-radius:9px;
+      background:var(--glass); border:1px solid var(--border-subtle);
+      display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0;
+    }
+    .env-name { font-size:13px; font-weight:500; }
+    .env-sub  { font-size:10.5px; color:var(--text-muted); }
+    .env-pct  { font-family:'Geist Mono',monospace; font-size:12px; color:var(--text-accent); min-width:34px; text-align:right; }
+
+    input[type="range"] {
+      -webkit-appearance:none; appearance:none;
+      width:100%; height:3px; background:var(--border-default); border-radius:2px; cursor:pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+      background:var(--accent); cursor:pointer;
+      box-shadow:0 0 0 3px var(--accent-dim), 0 0 10px var(--accent-glow);
+      transition:transform 0.14s var(--ease-spring);
+    }
+    input[type="range"]:hover::-webkit-slider-thumb { transform:scale(1.25); }
+    input[type="range"]::-moz-range-thumb {
+      width:14px; height:14px; border-radius:50%; background:var(--accent); border:none;
+    }
+
+    /* Mission log */
+    .mission-body { padding:11px 13px; display:flex; flex-direction:column; gap:9px; }
+    .mission-add {
+      display:flex; gap:7px; align-items:center;
+    }
+    .mission-input-box {
+      flex:1; display:flex; align-items:center; gap:7px;
+      padding:8px 12px; border-radius:var(--radius-item);
+      border:1px solid var(--border-default); background:var(--glass);
+      transition:border-color 0.16s;
+    }
+    .mission-input-box:focus-within { border-color:var(--border-accent); background:var(--glass-active); }
+    .mission-inp { flex:1; font-size:13px; }
+    .mission-add-btn {
+      width:34px; height:34px; border-radius:var(--radius-btn);
+      background:var(--accent-dim); border:1px solid var(--border-accent);
+      color:var(--accent); font-size:20px; line-height:1;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+      transition: background 0.16s, transform 0.15s var(--ease-spring);
+    }
+    .mission-add-btn:hover { background:rgba(34,197,94,0.2); transform:scale(1.07); }
+    .mission-add-btn:active { transform:scale(0.95); }
+
+    .mission-list { display:flex; flex-direction:column; gap:5px; max-height:220px; overflow-y:auto; padding-right:2px; }
+    .mission-empty { text-align:center; padding:16px 0; font-size:12px; color:var(--text-muted); font-style:italic; }
+
+    .m-item {
+      display:flex; align-items:flex-start; gap:9px;
+      padding:9px 10px; border-radius:var(--radius-item);
+      border:1px solid var(--border-subtle); background:var(--glass);
+      transition:all 0.16s; animation: m-in 0.22s var(--ease-spring);
+    }
+    @keyframes m-in { from{opacity:0;transform:translateY(-5px) scale(0.97);} to{opacity:1;transform:none;} }
+    .m-item:hover { border-color:var(--border-default); background:var(--glass-hover); }
+    .m-item.done { opacity:0.4; }
+    .m-item.done .m-text { text-decoration:line-through; }
+
+    .m-check {
+      width:17px; height:17px; border-radius:5px;
+      border:1.5px solid var(--border-strong); background:transparent;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;
+      cursor:pointer; transition:all 0.16s;
+    }
+    .m-item.done .m-check { background:var(--accent); border-color:var(--accent); }
+    .m-check svg { display:none; }
+    .m-item.done .m-check svg { display:block; }
+
+    .m-text { flex:1; font-size:12.5px; color:var(--text-secondary); line-height:1.4; word-break:break-word; }
+    .m-del {
+      width:20px; height:20px; border-radius:5px; color:var(--text-muted);
+      display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;
+      opacity:0; transition:opacity 0.14s, color 0.14s, background 0.14s;
+    }
+    .m-item:hover .m-del { opacity:1; }
+    .m-del:hover { color:var(--error); background:rgba(239,68,68,0.1); }
+
+    .m-footer { display:flex; align-items:center; justify-content:space-between; }
+    .m-stats-txt { font-size:11px; color:var(--text-muted); }
+    .m-clear-btn {
+      font-size:11px; color:var(--text-muted); padding:3px 8px;
+      border-radius:5px; border:1px solid transparent; transition:all 0.14s;
+    }
+    .m-clear-btn:hover { color:var(--error); border-color:rgba(239,68,68,0.25); background:rgba(239,68,68,0.08); }
+
+    /* ─── MAIN STAGE ─────────────────────────────────────────────── */
+    #stage {
+      grid-column:2; grid-row:1;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      position:relative; overflow:hidden; background:var(--bg-base);
+    }
+
+    /* Ambient radial glow — pulses when running */
+    #stage::before {
+      content:''; position:absolute; width:520px; height:520px;
+      background:radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 65%);
+      border-radius:50%; top:50%; left:50%; transform:translate(-50%,-52%);
+      pointer-events:none; opacity:0; transition:opacity 1.4s var(--ease-smooth);
+    }
+    #stage.running::before { opacity:1; }
+
+    /* Subtle grid texture */
+    #stage::after {
+      content:''; position:absolute; inset:0;
+      background-image:
+        linear-gradient(var(--border-subtle) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+      background-size:48px 48px;
+      mask-image:radial-gradient(ellipse 65% 65% at 50% 50%, rgba(0,0,0,0.35) 0%, transparent 100%);
+      pointer-events:none; opacity:0.45;
+    }
+
+    /* Stats bar */
+    .stage-stats {
+      position:absolute; top:0; left:0; right:0; z-index:3;
+      display:flex; align-items:center;
+      padding:0 22px; height:var(--header-h);
+      border-bottom:1px solid var(--border-subtle);
+    }
+    .s-stat { display:flex; flex-direction:column; gap:1px; padding:0 16px; border-right:1px solid var(--border-subtle); }
+    .s-stat:first-child { padding-left:0; }
+    .s-stat:last-child  { border-right:none; }
+    .s-val { font-family:'Geist Mono',monospace; font-size:14px; font-weight:500; font-variant-numeric:tabular-nums; }
+    .s-lbl { font-size:10px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); }
+    .stage-stats-right { margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .mode-pill {
+      padding:4px 11px; border-radius:var(--radius-pill);
+      border:1px solid var(--border-default); font-size:11px; font-weight:600;
+      letter-spacing:0.08em; text-transform:uppercase; color:var(--text-secondary);
+      font-family:'Geist Mono',monospace;
+    }
+
+    /* Session status pill */
+    .stage-status {
+      position:relative; z-index:2;
+      display:flex; align-items:center; gap:7px;
+      padding:5px 14px; border-radius:var(--radius-pill);
+      border:1px solid var(--border-subtle); background:var(--glass);
+      font-size:10.5px; font-weight:600; letter-spacing:0.14em;
+      text-transform:uppercase; color:var(--text-muted);
+      margin-bottom:42px;
+      transition:all 0.4s var(--ease-smooth);
+    }
+    #stage.running .stage-status { border-color:var(--border-accent); color:var(--accent); background:var(--accent-dim); }
+
+    .s-led { width:6px; height:6px; border-radius:50%; background:currentColor; }
+    #stage.running .s-led { animation:led 1.8s ease-in-out infinite; }
+    @keyframes led {
+      0%,100%{box-shadow:0 0 0 0 var(--accent-glow);}
+      50%{box-shadow:0 0 0 6px transparent;}
+    }
+
+    /* Ring */
+    .ring-wrap {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-55%);
+      pointer-events:none; z-index:1;
+    }
+    #p-ring { transform:rotate(-90deg); }
+    .ring-track { fill:none; stroke:var(--border-subtle); stroke-width:1.5; }
+    .ring-fill  { fill:none; stroke:var(--accent); stroke-width:1.5; stroke-linecap:round;
+                  transition:stroke-dashoffset 1s linear;
+                  filter:drop-shadow(0 0 7px var(--accent-glow)); }
+
+    /* Timer */
+    .timer-block { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:9px; margin-bottom:48px; }
+
+    #timer {
+      font-family:'Space Grotesk', monospace;
+      font-size: clamp(76px,11.5vw,156px);
+      font-weight:700; letter-spacing:-0.04em; line-height:1;
+      font-variant-numeric:tabular-nums;
+      color:var(--text-primary); transition:color 0.5s;
+      will-change:contents; transform:translateZ(0);
+    }
+    #timer.warn  { color:var(--warn); }
+    #timer.crit  { color:var(--error); }
+
+    .timer-sub {
+      display:flex; align-items:center; gap:14px;
+      font-size:11px; font-family:'Geist Mono',monospace;
+      color:var(--text-muted); letter-spacing:0.07em;
+    }
+    .tsep { width:3px; height:3px; border-radius:50%; background:var(--border-strong); }
+
+    /* Controls */
+    .ctrl-row { position:relative; z-index:2; display:flex; align-items:center; gap:9px; }
+    .ctrl-btn {
+      display:flex; align-items:center; gap:7px;
+      padding:10px 20px; border-radius:var(--radius-pill);
+      border:1px solid var(--border-default); background:var(--glass);
+      color:var(--text-secondary); font-size:13px; font-weight:500;
+      transition:all 0.16s var(--ease-smooth);
+    }
+    .ctrl-btn:hover { border-color:var(--border-strong); background:var(--glass-hover); color:var(--text-primary); }
+    .ctrl-btn:active { transform:scale(0.97); }
+
+    .ctrl-primary {
+      padding:12px 32px; background:var(--accent); border-color:transparent;
+      color:var(--text-inverse); font-size:14px; font-weight:600;
+      box-shadow:0 4px 24px var(--accent-glow);
+      transition:all 0.18s var(--ease-spring);
+    }
+    .ctrl-primary:hover { background:var(--accent-hover); box-shadow:0 6px 32px var(--accent-glow); transform:translateY(-2px); }
+    .ctrl-primary:active { transform:translateY(0) scale(0.98); }
+
+    /* Duration chips */
+    .dur-row { position:relative; z-index:2; display:flex; gap:5px; margin-top:26px; }
+    .dur-chip {
+      padding:5px 13px; border-radius:var(--radius-pill);
+      border:1px solid var(--border-subtle); background:var(--glass);
+      font-size:11.5px; font-family:'Geist Mono',monospace; color:var(--text-muted);
+      transition:all 0.15s;
+    }
+    .dur-chip:hover { border-color:var(--border-default); color:var(--text-secondary); }
+    .dur-chip.active { border-color:var(--border-accent); background:var(--accent-dim); color:var(--accent); }
+
+    /* ─── CONSOLE DOCK ──────────────────────────────────────────── */
+    #console {
+      grid-column:2; grid-row:2;
+      display:flex; flex-direction:column;
+      border-top:1px solid var(--border-subtle);
+      background:var(--bg-surface); overflow:hidden;
+    }
+
+    .con-head {
+      display:flex; align-items:center; gap:9px;
+      padding:0 15px; height:35px;
+      border-bottom:1px solid var(--border-subtle); flex-shrink:0;
+    }
+    .con-dots { display:flex; gap:5px; }
+    .con-dot  { width:8px; height:8px; border-radius:50%; }
+    .con-dot:nth-child(1){background:#EF4444;}
+    .con-dot:nth-child(2){background:#F59E0B;}
+    .con-dot:nth-child(3){background:#22C55E;}
+    .con-title { font-size:10.5px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); font-family:'Geist Mono',monospace; }
+    .con-actions { margin-left:auto; display:flex; gap:6px; }
+    .con-btn {
+      font-size:10.5px; font-family:'Geist Mono',monospace; color:var(--text-muted);
+      padding:2px 9px; border-radius:5px; border:1px solid var(--border-subtle); background:transparent;
+      transition:all 0.13s;
+    }
+    .con-btn:hover { color:var(--text-secondary); border-color:var(--border-default); background:var(--glass); }
+
+    .con-output {
+      flex:1; overflow-y:auto; padding:7px 15px 10px;
+      display:flex; flex-direction:column; gap:1px;
+    }
+
+    .log-line {
+      display:grid; grid-template-columns:78px 56px 1fr; gap:0;
+      font-family:'Geist Mono',monospace; font-size:11.5px; line-height:1.72;
+      animation: log-in 0.18s var(--ease-smooth);
+    }
+    @keyframes log-in { from{opacity:0;transform:translateY(3px);} to{opacity:1;transform:none;} }
+    .l-ts    { color:var(--text-muted); }
+    .l-lvl   { font-weight:600; }
+    .l-msg   { color:var(--text-secondary); white-space:pre-wrap; word-break:break-all; }
+    .l-lvl.info    { color:var(--info); }
+    .l-lvl.success { color:var(--accent); }
+    .l-lvl.warn    { color:var(--warn); }
+    .l-lvl.error   { color:var(--error); }
+    .l-lvl.system  { color:var(--text-muted); }
+
+    /* Entrance animations */
+    .a-in { animation: a-in 0.45s var(--ease-smooth) both; }
+    @keyframes a-in { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:none;} }
+    .d1{animation-delay:0.04s} .d2{animation-delay:0.1s} .d3{animation-delay:0.18s}
+    .d4{animation-delay:0.27s} .d5{animation-delay:0.36s}
+  </style>
+</head>
+<body>
+
+<!-- ═══ UNLOCK OVERLAY ══════════════════════════════════════════ -->
+<div id="unlock-overlay">
+  <div class="unlock-mark">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="9" stroke="#22C55E" stroke-width="1.5"/>
+      <path d="M12 7v5l3 3" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <p class="unlock-eyebrow">Deep Focus System</p>
+  <h1 class="unlock-title">STASIS <em>PRO</em></h1>
+  <p class="unlock-sub">Initialize the audio engine to unlock ambient soundscapes synthesized entirely via Web Audio API — no files, pure code.</p>
+  <button class="unlock-btn" id="btn-unlock">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <path d="M7.5 1v6.5m0 0l2.5-2.5M7.5 7.5l-2.5-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M2 9.5a6 6 0 1 0 11 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+    </svg>
+    Initialize System
+  </button>
+  <p class="unlock-note">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6 5v3.5M6 3.2v.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    Zero external audio files — synthesized locally in your browser.
+  </p>
+</div>
+
+<!-- ═══ APP SHELL ════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════════ -->
+  <aside id="sidebar">
+    <div class="sb-head">
+      <div class="sb-led"></div>
+      <span class="sb-brand">Stasis Pro</span>
+      <span class="sb-ver">v3.0.0</span>
+    </div>
+
+    <div class="sb-body">
+      <!-- Session Modes -->
+      <div class="panel a-in d1">
+        <div class="panel-head">
+          <span class="panel-ico">⏱</span>
+          <span class="panel-lbl">Session Mode</span>
+        </div>
+        <div class="mode-chips" id="mode-chips">
+          <button class="mode-chip active" data-mode="focus">
+            <span class="chip-dot"></span>Deep Focus
+          </button>
+          <button class="mode-chip" data-mode="flow">
+            <span class="chip-dot"></span>Flow State
+          </button>
+          <button class="mode-chip" data-mode="break">
+            <span class="chip-dot"></span>Short Break
+          </button>
+          <button class="mode-chip" data-mode="long">
+            <span class="chip-dot"></span>Long Break
+          </button>
+        </div>
+      </div>
+
+      <!-- Environment Mixer -->
+      <div class="panel a-in d2">
+        <div class="panel-head">
+          <span class="panel-ico">🎚</span>
+          <span class="panel-lbl">Environment Mixer</span>
+          <span class="panel-badge" id="mixer-badge">OFFLINE</span>
+        </div>
+        <div class="env-body">
+          <!-- Rain -->
+          <div class="env-track">
+            <div class="env-row">
+              <div class="env-info">
+                <div class="env-ico">🌧</div>
+                <div>
+                  <div class="env-name">Heavy Rain</div>
+                  <div class="env-sub" id="rain-sub">Idle</div>
+                </div>
+              </div>
+              <div class="env-pct" id="rain-pct">0%</div>
+            </div>
+            <input type="range" id="rain-slider" min="0" max="100" value="0" aria-label="Heavy Rain volume" />
+          </div>
+
+          <!-- Forest -->
+          <div class="env-track">
+            <div class="env-row">
+              <div class="env-info">
+                <div class="env-ico">🌲</div>
+                <div>
+                  <div class="env-name">Deep Forest</div>
+                  <div class="env-sub" id="forest-sub">Idle</div>
+                </div>
+              </div>
+              <div class="env-pct" id="forest-pct">0%</div>
+            </div>
+            <input type="range" id="forest-slider" min="0" max="100" value="0" aria-label="Deep Forest volume" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Mission Log -->
+      <div class="panel a-in d3" style="flex:1;min-height:0;">
+        <div class="panel-head">
+          <span class="panel-ico">✦</span>
+          <span class="panel-lbl">Mission Log</span>
+          <span class="panel-badge" id="mission-badge">0/0</span>
+        </div>
+        <div class="mission-body">
+          <div class="mission-add">
+            <div class="mission-input-box">
+              <svg width="11" height="11" viewBox="0 0 11 11" fill="none" style="opacity:0.3;flex-shrink:0">
+                <circle cx="4.5" cy="4.5" r="3.5" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M9 9L7.2 7.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              <input class="mission-inp" id="mission-inp" type="text" placeholder="Add objective…" maxlength="120" />
+            </div>
+            <button class="mission-add-btn" id="btn-m-add" aria-label="Add mission">+</button>
+          </div>
+          <div class="mission-list" id="mission-list">
+            <div class="mission-empty" id="mission-empty">No missions yet. Add your first objective.</div>
+          </div>
+          <div class="m-footer">
+            <span class="m-stats-txt" id="m-stats">0 completed</span>
+            <button class="m-clear-btn" id="btn-m-clear">Clear all</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══ MAIN STAGE ════════════════════════════════════════════════ -->
+  <main id="stage">
+    <!-- Stats bar -->
+    <div class="stage-stats a-in d1">
+      <div class="s-stat"><span class="s-val" id="stat-sessions">0</span><span class="s-lbl">Sessions</span></div>
+      <div class="s-stat"><span class="s-val" id="stat-focus">0m</span><span class="s-lbl">Focus Time</span></div>
+      <div class="s-stat"><span class="s-val" id="stat-streak">0</span><span class="s-lbl">Streak</span></div>
+      <div class="stage-stats-right">
+        <span class="mode-pill" id="mode-pill">FOCUS · 25:00</span>
+      </div>
+    </div>
+
+    <!-- SVG Progress ring -->
+    <div class="ring-wrap">
+      <svg id="p-ring" width="460" height="460" viewBox="0 0 460 460">
+        <circle class="ring-track" cx="230" cy="230" r="210" />
+        <circle class="ring-fill"  cx="230" cy="230" r="210" id="ring-fill" />
+      </svg>
+    </div>
+
+    <!-- Status pill -->
+    <div class="stage-status a-in d2">
+      <div class="s-led"></div>
+      <span id="status-txt">READY</span>
+    </div>
+
+    <!-- Timer -->
+    <div class="timer-block a-in d3">
+      <div id="timer" aria-live="polite">25:00</div>
+      <div class="timer-sub">
+        <span id="t-mode">DEEP FOCUS</span>
+        <div class="tsep"></div>
+        <span id="t-elapsed">ELAPSED 00:00</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="ctrl-row a-in d4">
+      <button class="ctrl-btn" id="btn-reset">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M1 6.5A5.5 5.5 0 1 0 2.5 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <path d="M1 1.5V3H2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Reset
+      </button>
+      <button class="ctrl-btn ctrl-primary" id="btn-start">▶&nbsp;&nbsp;Start Session</button>
+      <button class="ctrl-btn" id="btn-skip">
+        Skip
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M2 2.5l5.5 4L2 10.5V2.5zM11 2.5v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Duration chips -->
+    <div class="dur-row a-in d5">
+      <button class="dur-chip active" data-mins="25">25m</button>
+      <button class="dur-chip" data-mins="45">45m</button>
+      <button class="dur-chip" data-mins="52">52m</button>
+      <button class="dur-chip" data-mins="90">90m</button>
+      <button class="dur-chip" data-mins="5">5m</button>
+      <button class="dur-chip" data-mins="15">15m</button>
+    </div>
+  </main>
+
+  <!-- ══ SYSTEM CONSOLE ════════════════════════════════════════════ -->
+  <div id="console" role="log" aria-live="polite" aria-label="System Console">
+    <div class="con-head">
+      <div class="con-dots"><div class="con-dot"></div><div class="con-dot"></div><div class="con-dot"></div></div>
+      <span class="con-title">STASIS PRO — System Console</span>
+      <div class="con-actions">
+        <button class="con-btn" id="btn-con-clr">CLR</button>
+        <button class="con-btn" id="btn-con-exp">EXP</button>
+      </div>
+    </div>
+    <div class="con-output" id="con-out"></div>
+  </div>
+
+</div><!-- /#app -->
+
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STASIS PRO — APPLICATION LOGIC
+     ─────────────────────────────────────────────────────────────
+     Module architecture:
+       App.Console — timestamped log renderer + export
+       App.Storage — localStorage persistence (namespaced)
+       App.Audio   — Web Audio API synthesis engine
+       App.Timer   — countdown engine + SVG ring + state
+       App.Missions— mission CRUD + localStorage sync
+       App.UI      — DOM bindings, render helpers
+       App.init()  — boot sequence
+═══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   APP NAMESPACE — all modules live here, zero global leakage
+══════════════════════════════════════════════════════════════ */
+const App = {};
+
+/* ──────────────────────────────────────────────────────────────
+   SHARED STATE — single source of truth, mutated only by modules
+────────────────────────────────────────────────────────────── */
+App.State = {
+  /* Timer */
+  running:          false,
+  paused:           false,
+  totalSecs:        25 * 60,
+  remainingSecs:    25 * 60,
+  elapsedSecs:      0,
+  durationMins:     25,
+  mode:             'focus',
+  intervalId:       null,
+
+  /* Persisted stats */
+  sessions:         0,
+  focusMins:        0,
+  streak:           0,
+  lastDate:         null,
+
+  /* Flags */
+  audioReady:       false,
+};
+
+/* Session mode presets */
+App.MODES = {
+  focus: { label:'DEEP FOCUS',  tag:'FOCUS',   mins:25 },
+  flow:  { label:'FLOW STATE',  tag:'FLOW',    mins:52 },
+  break: { label:'SHORT BREAK', tag:'BREAK',   mins:5  },
+  long:  { label:'LONG BREAK',  tag:'LONG BRK',mins:15 },
+};
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.Console — SYSTEM LOG MODULE
+   ──────────────────────────────────────────────────────────────
+   Renders timestamped, level-tagged entries into the terminal
+   dock. Maintains an internal buffer for export. Auto-prunes
+   DOM entries beyond MAX_LINES to prevent memory pressure.
+══════════════════════════════════════════════════════════════ */
+App.Console = (function () {
+  const MAX_LINES = 180;
+  let domCount = 0;
+  const buffer = [];  /* [{ts, level, msg}] for export */
+
+  /**
+   * ts — returns HH:MM:SS timestamp string
+   * @returns {string}
+   */
+  function ts() {
+    const n = new Date(), p = n => String(n).padStart(2,'0');
+    return `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  }
+
+  /**
+   * esc — minimal HTML escape to prevent XSS in user-supplied text
+   * @param {string} s
+   * @returns {string}
+   */
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /**
+   * log — append a styled entry to the console output pane.
+   * @param {string} msg
+   * @param {'system'|'info'|'success'|'warn'|'error'} lvl
+   */
+  function log(msg, lvl = 'info') {
+    const out = document.getElementById('con-out');
+    if (!out) return;
+
+    const stamp = ts();
+    buffer.push({ stamp, lvl, msg });
+
+    /* Prune DOM if over limit */
+    while (domCount >= MAX_LINES) {
+      const first = out.querySelector('.log-line');
+      if (first) { out.removeChild(first); domCount--; } else break;
+    }
+
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML =
+      `<span class="l-ts">[${stamp}]</span>` +
+      `<span class="l-lvl ${lvl}">${lvl.toUpperCase().padEnd(7)}</span>` +
+      `<span class="l-msg">${esc(msg)}</span>`;
+
+    out.appendChild(line);
+    domCount++;
+
+    /* Scroll to latest */
+    requestAnimationFrame(() => { out.scrollTop = out.scrollHeight; });
+  }
+
+  /**
+   * clear — wipe all log entries from DOM + reset buffer
+   */
+  function clear() {
+    const out = document.getElementById('con-out');
+    if (out) out.innerHTML = '';
+    domCount = 0;
+    buffer.length = 0;
+    log('Console cleared.', 'system');
+  }
+
+  /**
+   * exportLog — download buffer as plain-text .txt file
+   */
+  function exportLog() {
+    const text = buffer.map(e => `[${e.stamp}] [${e.lvl.toUpperCase()}] ${e.msg}`).join('\n');
+    const blob = new Blob([text], { type:'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `stasis-log-${Date.now()}.txt`; a.click();
+    URL.revokeObjectURL(url);
+    log('Log exported to disk.', 'success');
+  }
+
+  return { log, clear, exportLog };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.Storage — LOCALSTORAGE PERSISTENCE MODULE
+   ──────────────────────────────────────────────────────────────
+   All keys are prefixed 'sp:' (stasis-pro) to prevent collisions.
+   All operations are wrapped in try/catch — storage may be
+   blocked in private browsing / certain iframe contexts.
+══════════════════════════════════════════════════════════════ */
+App.Storage = (function () {
+  const PFX = 'sp:';
+
+  function ok() {
+    try { localStorage.setItem('__t__','1'); localStorage.removeItem('__t__'); return true; }
+    catch { return false; }
+  }
+
+  /**
+   * set — JSON-serialize and write to localStorage
+   * @param {string} key
+   * @param {*} val
+   */
+  function set(key, val) {
+    if (!ok()) return;
+    try { localStorage.setItem(PFX + key, JSON.stringify(val)); }
+    catch(e) { App.Console.log(`Storage.set error [${key}]: ${e.message}`, 'error'); }
+  }
+
+  /**
+   * get — read and JSON-parse from localStorage, with fallback
+   * @param {string} key
+   * @param {*} fallback
+   * @returns {*}
+   */
+  function get(key, fallback = null) {
+    if (!ok()) return fallback;
+    try {
+      const r = localStorage.getItem(PFX + key);
+      return r !== null ? JSON.parse(r) : fallback;
+    } catch(e) {
+      App.Console.log(`Storage.get error [${key}]: ${e.message}`, 'error');
+      return fallback;
+    }
+  }
+
+  /* ── Stats helpers ── */
+
+  /** loadStats — restore persisted counters into App.State */
+  function loadStats() {
+    App.State.sessions  = get('sessions', 0);
+    App.State.focusMins = get('focus_mins', 0);
+    App.State.streak    = get('streak', 0);
+    App.State.lastDate  = get('last_date', null);
+    App.Console.log(
+      `Stats loaded — sessions:${App.State.sessions}  focus:${App.State.focusMins}m  streak:${App.State.streak}`,
+      'system'
+    );
+  }
+
+  /** saveStats — flush current App.State counters to localStorage */
+  function saveStats() {
+    set('sessions',   App.State.sessions);
+    set('focus_mins', App.State.focusMins);
+    set('streak',     App.State.streak);
+    set('last_date',  App.State.lastDate);
+  }
+
+  /* ── Mission helpers ── */
+
+  /** @returns {Array<{id,text,done,at}>} */
+  function loadMissions()       { return get('missions', []); }
+
+  /** @param {Array} ms */
+  function saveMissions(ms)     { set('missions', ms); }
+
+  return { set, get, loadStats, saveStats, loadMissions, saveMissions };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.Audio — WEB AUDIO API SYNTHESIS ENGINE
+   ──────────────────────────────────────────────────────────────
+   Generates ALL sounds procedurally. No external audio files.
+
+   RAIN  : White noise → Bandpass filter → High-shelf → Gain
+   FOREST: Pink noise  → Lowpass filter  → Convolver (reverb) → Gain
+           + Sparse bird-chirp oscillator events via setTimeout
+
+   Volume changes use exponentialRampToValueAtTime to eliminate
+   audible clicks/pops at gain transitions.
+══════════════════════════════════════════════════════════════ */
+App.Audio = (function () {
+
+  /** @type {AudioContext|null} */
+  let ctx = null;
+
+  /* Per-track state objects */
+  const T = {
+    rain:   { src: null, gain: null, vol: 0, started: false },
+    forest: { src: null, gain: null, vol: 0, started: false },
+  };
+
+  /* Cached reverb impulse response buffer */
+  let irBuf = null;
+
+  /* Bird scheduler timer handle */
+  let birdTimer = null;
+
+  /* ──────────────────────────────────────────────────────────
+     BUFFER GENERATORS
+  ────────────────────────────────────────────────────────── */
+
+  /**
+   * makeWhiteNoise — fills an AudioBuffer with uniform random samples.
+   * White noise has equal energy at all frequencies.
+   * Used as raw material for the rain synthesis.
+   * @param {number} secs
+   * @returns {AudioBuffer}
+   */
+  function makeWhiteNoise(secs) {
+    const sr    = ctx.sampleRate;
+    const buf   = ctx.createBuffer(1, sr * secs, sr);
+    const data  = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  /**
+   * makePinkNoise — Paul Kellett's 7-coefficient pink noise approximation.
+   * Pink noise rolls off at ~-3 dB/octave, resembling natural ambiences
+   * (wind, forest, distant traffic). Used as forest base.
+   * @param {number} secs
+   * @returns {AudioBuffer}
+   */
+  function makePinkNoise(secs) {
+    const sr   = ctx.sampleRate;
+    const buf  = ctx.createBuffer(1, sr * secs, sr);
+    const data = buf.getChannelData(0);
+    let b0=0, b1=0, b2=0, b3=0, b4=0, b5=0, b6=0;
+    for (let i = 0; i < data.length; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99886*b0 + w*0.0555179;
+      b1 = 0.99332*b1 + w*0.0750759;
+      b2 = 0.96900*b2 + w*0.1538520;
+      b3 = 0.86650*b3 + w*0.3104856;
+      b4 = 0.55000*b4 + w*0.5329522;
+      b5 = -0.7616*b5 - w*0.0168980;
+      const pink = (b0+b1+b2+b3+b4+b5+b6 + w*0.5362) * 0.11;
+      b6 = w * 0.115926;
+      data[i] = pink;
+    }
+    return buf;
+  }
+
+  /**
+   * makeIR — generates a synthetic reverb Impulse Response.
+   * Stereo exponentially-decaying white noise simulates room acoustics.
+   * Gives the forest ambience a spatial, immersive quality.
+   * @param {number} secs   - reverb tail length in seconds
+   * @param {number} decay  - decay exponent (higher = shorter tail)
+   * @returns {AudioBuffer}
+   */
+  function makeIR(secs = 3.2, decay = 2.4) {
+    const sr  = ctx.sampleRate;
+    const len = sr * secs;
+    const buf = ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, decay);
+      }
+    }
+    return buf;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     RAIN CHAIN
+     WhiteNoise → BandpassFilter(600Hz) → HighShelf(+5dB@3kHz) → Gain
+  ────────────────────────────────────────────────────────── */
+
+  /**
+   * startRain — creates and connects the rain synthesis subgraph.
+   * The bandpass filter sculpts white noise into a rain-texture;
+   * the high-shelf boosts the characteristic high-frequency hiss.
+   */
+  function startRain() {
+    if (T.rain.started) return;
+
+    const buf = makeWhiteNoise(10);           /* 10s looping buffer  */
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+
+    /* Bandpass: rain energy centers around 400–800 Hz */
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 580; bp.Q.value = 0.7;
+
+    /* High shelf: +5 dB above 3 kHz for rain hiss */
+    const hs = ctx.createBiquadFilter();
+    hs.type = 'highshelf'; hs.frequency.value = 3000; hs.gain.value = 5;
+
+    /* Master gain — silent at init */
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+
+    src.connect(bp); bp.connect(hs); hs.connect(gain); gain.connect(ctx.destination);
+    src.start(0);
+
+    T.rain.src = src; T.rain.gain = gain; T.rain.started = true;
+    App.Console.log('Audio.Rain  | chain: WhiteNoise → BPF(580Hz,Q0.7) → HiShelf(+5dB@3k) → Gain', 'system');
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     FOREST CHAIN
+     PinkNoise → LowpassFilter(1.1kHz) → Convolver(IR) → Gain
+     + Bird oscillator events via scheduleBirds()
+  ────────────────────────────────────────────────────────── */
+
+  /**
+   * startForest — creates the forest synthesis subgraph.
+   * Pink noise provides wind/leaf texture; convolver adds depth.
+   */
+  function startForest() {
+    if (T.forest.started) return;
+
+    const buf = makePinkNoise(12);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+
+    /* Low-pass: cut >1.1 kHz, keeping forest's low-mid character */
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1100; lp.Q.value = 0.65;
+
+    /* Build reverb convolver with cached IR */
+    if (!irBuf) irBuf = makeIR(3.2, 2.4);
+    const conv = ctx.createConvolver();
+    conv.buffer = irBuf;
+
+    /* Wet/dry blender */
+    const dry = ctx.createGain(); dry.gain.value = 0.62;
+    const wet = ctx.createGain(); wet.gain.value = 0.38;
+
+    const gain = ctx.createGain(); gain.gain.value = 0;
+
+    /* Wire: src → lp → [dry → gain] and [conv → wet → gain] */
+    src.connect(lp);
+    lp.connect(dry); dry.connect(gain);
+    lp.connect(conv); conv.connect(wet); wet.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(0);
+
+    T.forest.src = src; T.forest.gain = gain; T.forest.started = true;
+
+    scheduleBirds(); /* start sparse bird-call events */
+    App.Console.log('Audio.Forest| chain: PinkNoise → LP(1.1kHz) → Convolver(IR 3.2s) → Gain + Birds', 'system');
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     BIRD CALL SYNTHESIZER
+     Creates short frequency-modulated oscillator bursts at
+     randomized intervals to simulate ambient birdsong.
+  ────────────────────────────────────────────────────────── */
+
+  /**
+   * scheduleBirds — recursively schedules the next bird chirp.
+   * Interval is randomized (4–14 s) so it doesn't sound mechanical.
+   */
+  function scheduleBirds() {
+    const delay = 4000 + Math.random() * 10000;
+    birdTimer = setTimeout(() => {
+      if (T.forest.started && T.forest.vol > 0.04 && ctx) chirp();
+      if (T.forest.started) scheduleBirds();
+    }, delay);
+  }
+
+  /**
+   * chirp — emits a single synthetic bird call.
+   * Two frequency-modulated sine oscillators + amplitude envelope.
+   * Pitch and timing are randomized for organic variation.
+   */
+  function chirp() {
+    if (!ctx || !T.forest.gain) return;
+    const now   = ctx.currentTime;
+    const freq  = 2200 + Math.random() * 3800;     /* 2.2–6 kHz range  */
+    const dur   = 0.07 + Math.random() * 0.18;     /* 70–250 ms        */
+    const amp   = T.forest.vol * 0.28 * (0.45 + Math.random() * 0.55);
+    const n     = Math.random() > 0.6 ? 2 : 1;     /* 1 or 2 syllables */
+
+    for (let i = 0; i < n; i++) {
+      const o  = ctx.createOscillator();
+      const o2 = ctx.createOscillator();
+      const g  = ctx.createGain();
+
+      o.type  = 'sine'; o.frequency.value  = freq * (1 + i * 0.08);
+      o2.type = 'sine'; o2.frequency.value = freq * 1.5 * (1 + i * 0.04);
+
+      const start = now + i * (dur + 0.04);
+      g.gain.setValueAtTime(0, start);
+      g.gain.linearRampToValueAtTime(amp, start + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      o.connect(g); o2.connect(g); g.connect(T.forest.gain);
+      o.start(start);  o.stop(start + dur + 0.015);
+      o2.start(start); o2.stop(start + dur + 0.015);
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     PUBLIC API
+  ────────────────────────────────────────────────────────── */
+
+  /**
+   * init — creates AudioContext and boots all synthesis chains.
+   * MUST be called from inside a user gesture (button click)
+   * to satisfy browser autoplay policy.
+   */
+  function init() {
+    if (ctx) return;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      App.Console.log(`Audio.ctx   | created — sampleRate:${ctx.sampleRate}Hz state:"${ctx.state}"`, 'system');
+      startRain();
+      startForest();
+
+      /* Update mixer badge in sidebar */
+      const badge = document.getElementById('mixer-badge');
+      if (badge) { badge.textContent = 'ONLINE'; badge.style.color = 'var(--accent)'; }
+
+      App.State.audioReady = true;
+      App.Console.log('Audio.Engine| all synthesis chains ready. Adjust sliders to activate.', 'success');
+    } catch (e) {
+      App.Console.log(`Audio.init  | FAILED: ${e.message}`, 'error');
+    }
+  }
+
+  /**
+   * resume — re-activates a browser-suspended AudioContext.
+   * Browsers suspend contexts on tab blur; call this on any interaction.
+   */
+  function resume() {
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().then(() => App.Console.log('Audio.ctx   | resumed from suspended.', 'system'));
+    }
+  }
+
+  /**
+   * setVolume — ramps a track gain using an exponential curve
+   * to eliminate audible clicks at transitions.
+   * @param {'rain'|'forest'} name
+   * @param {number} v — 0.0 to 1.0 linear
+   * @param {number} ramp — seconds for ramp (default 60ms)
+   */
+  function setVolume(name, v, ramp = 0.06) {
+    const t = T[name];
+    if (!t || !t.gain || !ctx) return;
+    t.vol = v;
+    const now    = ctx.currentTime;
+    const target = Math.max(0.0001, Math.min(1, v));
+    t.gain.gain.cancelScheduledValues(now);
+    t.gain.gain.setValueAtTime(t.gain.gain.value, now);
+    if (v < 0.0001) t.gain.gain.exponentialRampToValueAtTime(0.0001, now + ramp);
+    else            t.gain.gain.exponentialRampToValueAtTime(target, now + ramp);
+  }
+
+  return { init, resume, setVolume };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.Timer — COUNTDOWN ENGINE + SVG RING
+   ──────────────────────────────────────────────────────────────
+   Drives the 1-second setInterval countdown, formats display
+   strings, animates the SVG progress ring, handles completion.
+   Uses font-variant-numeric:tabular-nums (set in CSS) to prevent
+   layout jitter from variable-width digits.
+══════════════════════════════════════════════════════════════ */
+App.Timer = (function () {
+
+  /* SVG ring geometry */
+  const R    = 210;
+  const CIRC = 2 * Math.PI * R;   /* ≈ 1319.47 px */
+
+  /**
+   * fmt — format raw seconds as MM:SS (always 5 chars, e.g. "09:07")
+   * @param {number} s
+   * @returns {string}
+   */
+  function fmt(s) {
+    s = Math.max(0, Math.floor(s));
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }
+
+  /**
+   * fmtDur — human-readable elapsed string for log messages
+   * @param {number} s seconds
+   * @returns {string}
+   */
+  function fmtDur(s) {
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s/60); const r = s%60;
+    return r ? `${m}m ${r}s` : `${m}m`;
+  }
+
+  /**
+   * updateRing — sets the SVG dashoffset so the ring arc reflects
+   * how much of the session remains.
+   * dashoffset 0     = full circle (session not started)
+   * dashoffset CIRC  = empty circle (session complete)
+   * @param {number} rem - remaining seconds
+   * @param {number} tot - total session seconds
+   */
+  function updateRing(rem, tot) {
+    const el = document.getElementById('ring-fill');
+    if (!el) return;
+    const fraction = tot > 0 ? rem / tot : 1;
+    const offset   = CIRC * (1 - fraction);
+    if (!el.style.strokeDasharray) el.style.strokeDasharray = String(CIRC);
+    el.style.strokeDashoffset = String(offset);
+  }
+
+  /**
+   * render — pushes all timer-related values into DOM.
+   * Called every tick and on any state transition.
+   */
+  function render() {
+    const { remainingSecs, totalSecs, elapsedSecs, mode } = App.State;
+    const m = App.MODES[mode];
+
+    /* Clock face */
+    const el = document.getElementById('timer');
+    if (el) {
+      el.textContent = fmt(remainingSecs);
+      const pct = totalSecs > 0 ? remainingSecs / totalSecs : 1;
+      el.classList.toggle('warn', pct <= 0.33 && pct > 0.10 && App.State.running);
+      el.classList.toggle('crit', pct <= 0.10 && App.State.running);
+    }
+
+    /* Sub-labels */
+    const modeEl = document.getElementById('t-mode');
+    if (modeEl) modeEl.textContent = m.label;
+
+    const elEl = document.getElementById('t-elapsed');
+    if (elEl) elEl.textContent = `ELAPSED ${fmt(elapsedSecs)}`;
+
+    /* Stats bar mode pill */
+    const pill = document.getElementById('mode-pill');
+    if (pill) pill.textContent = `${m.tag} · ${fmt(remainingSecs)}`;
+
+    /* Ring */
+    updateRing(remainingSecs, totalSecs);
+  }
+
+  /**
+   * onComplete — fires when countdown reaches 0.
+   * Updates + persists stats, resets state, notifies user.
+   */
+  function onComplete() {
+    App.Console.log(`✓ Session complete — ${App.MODES[App.State.mode].label} ${fmtDur(App.State.totalSecs)}`, 'success');
+
+    /* Increment stats for focus/flow sessions */
+    if (App.State.mode === 'focus' || App.State.mode === 'flow') {
+      App.State.sessions++;
+      App.State.focusMins += App.State.durationMins;
+      App.State.streak++;
+      App.State.lastDate = new Date().toISOString();
+      App.Console.log(
+        `Stats — sessions:${App.State.sessions}  focus:${App.State.focusMins}m  streak:${App.State.streak}`,
+        'info'
+      );
+    }
+
+    App.Storage.saveStats();
+    App.UI.renderStats();
+
+    /* Reset engine state */
+    clearInterval(App.State.intervalId);
+    App.State.intervalId = null;
+    App.State.running    = false;
+    App.State.paused     = false;
+    App.State.elapsedSecs = 0;
+    App.State.remainingSecs = 0;
+
+    document.getElementById('stage')?.classList.remove('running');
+
+    const stxt = document.getElementById('status-txt');
+    if (stxt) stxt.textContent = 'COMPLETE';
+
+    const sbtn = document.getElementById('btn-start');
+    if (sbtn) sbtn.textContent = '▶\u00A0\u00A0Start Session';
+
+    render();
+
+    /* Desktop notification (if permission granted) */
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('STASIS PRO', {
+        body: `${App.MODES[App.State.mode].label} session complete!`,
+        silent: true,
+      });
+    }
+  }
+
+  /**
+   * tick — core interval callback, fires every 1000ms.
+   */
+  function tick() {
+    if (!App.State.running) return;
+    App.State.remainingSecs = Math.max(0, App.State.remainingSecs - 1);
+    App.State.elapsedSecs++;
+    render();
+    if (App.State.remainingSecs <= 0) onComplete();
+  }
+
+  /* ── Public controls ── */
+
+  /** start — begin or resume countdown */
+  function start() {
+    if (App.State.running) return;
+
+    if (!App.State.paused) {
+      /* Fresh start — initialize from current duration */
+      App.State.remainingSecs = App.State.durationMins * 60;
+      App.State.totalSecs     = App.State.remainingSecs;
+      App.State.elapsedSecs   = 0;
+    }
+
+    App.State.running = true;
+    App.State.paused  = false;
+
+    clearInterval(App.State.intervalId);
+    App.State.intervalId = setInterval(tick, 1000);
+
+    document.getElementById('stage')?.classList.add('running');
+
+    const stxt = document.getElementById('status-txt');
+    if (stxt) stxt.textContent = 'ACTIVE';
+
+    const sbtn = document.getElementById('btn-start');
+    if (sbtn) sbtn.textContent = '⏸\u00A0\u00A0Pause';
+
+    App.Audio.resume();
+
+    App.Console.log(
+      `Timer started — ${App.MODES[App.State.mode].label} ${App.State.durationMins}m (${App.State.totalSecs}s)`,
+      'info'
+    );
+
+    render();
+  }
+
+  /** pause — pause countdown, preserving remaining time */
+  function pause() {
+    if (!App.State.running) return;
+    clearInterval(App.State.intervalId);
+    App.State.intervalId = null;
+    App.State.running    = false;
+    App.State.paused     = true;
+
+    document.getElementById('stage')?.classList.remove('running');
+
+    const stxt = document.getElementById('status-txt');
+    if (stxt) stxt.textContent = 'PAUSED';
+
+    const sbtn = document.getElementById('btn-start');
+    if (sbtn) sbtn.textContent = '▶\u00A0\u00A0Resume';
+
+    App.Console.log(
+      `Timer paused at ${fmt(App.State.remainingSecs)} (elapsed ${fmtDur(App.State.elapsedSecs)})`,
+      'warn'
+    );
+  }
+
+  /** toggle — primary button action: start ↔ pause */
+  function toggle() {
+    if (App.State.running) pause(); else start();
+  }
+
+  /** reset — stop and return to current duration */
+  function reset() {
+    clearInterval(App.State.intervalId);
+    App.State.intervalId   = null;
+    App.State.running      = false;
+    App.State.paused       = false;
+    App.State.remainingSecs = App.State.durationMins * 60;
+    App.State.totalSecs    = App.State.remainingSecs;
+    App.State.elapsedSecs  = 0;
+
+    document.getElementById('stage')?.classList.remove('running');
+
+    const stxt = document.getElementById('status-txt');
+    if (stxt) stxt.textContent = 'READY';
+
+    const sbtn = document.getElementById('btn-start');
+    if (sbtn) sbtn.textContent = '▶\u00A0\u00A0Start Session';
+
+    App.Console.log(`Timer reset → ${App.State.durationMins}m`, 'warn');
+    render();
+  }
+
+  /** skip — immediately trigger session completion */
+  function skip() {
+    App.Console.log('Session skipped.', 'warn');
+    clearInterval(App.State.intervalId);
+    App.State.intervalId   = null;
+    App.State.running      = false;
+    App.State.remainingSecs = 0;
+    render();
+    onComplete();
+  }
+
+  /**
+   * setMode — switch preset and reset
+   * @param {string} key
+   */
+  function setMode(key) {
+    if (!App.MODES[key]) return;
+    App.State.mode        = key;
+    App.State.durationMins = App.MODES[key].mins;
+    reset();
+    App.Console.log(`Mode → ${App.MODES[key].label} (${App.State.durationMins}m)`, 'info');
+  }
+
+  /**
+   * setDuration — set custom minutes and reset
+   * @param {number} mins
+   */
+  function setDuration(mins) {
+    mins = Math.max(1, Math.min(999, mins));
+    App.State.durationMins = mins;
+    if (!App.State.running) reset();
+    App.Console.log(`Duration → ${mins}m`, 'info');
+  }
+
+  return { start, pause, toggle, reset, skip, setMode, setDuration, render, fmt };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.Missions — MISSION LOG MODULE
+   ──────────────────────────────────────────────────────────────
+   CRUD on an in-memory array, auto-synced to localStorage.
+   Renders items with toggle-complete and delete affordances.
+══════════════════════════════════════════════════════════════ */
+App.Missions = (function () {
+
+  /* @type {Array<{id:string, text:string, done:boolean, at:string}>} */
+  let ms = [];
+
+  /** uid — collision-resistant ID */
+  const uid = () => `m${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`;
+
+  /**
+   * render — rebuilds mission list DOM from `ms` array.
+   * Re-attaches event handlers after each rebuild.
+   */
+  function render() {
+    const list  = document.getElementById('mission-list');
+    const empty = document.getElementById('mission-empty');
+    const badge = document.getElementById('mission-badge');
+    const stats = document.getElementById('m-stats');
+    if (!list) return;
+
+    const done  = ms.filter(m => m.done).length;
+    const total = ms.length;
+
+    if (badge) badge.textContent = `${done}/${total}`;
+    if (stats) stats.textContent = `${done} completed`;
+    if (empty) empty.style.display = total === 0 ? 'block' : 'none';
+
+    /* Remove old items, leave empty-state node */
+    list.querySelectorAll('.m-item').forEach(el => el.remove());
+
+    ms.forEach(m => {
+      const div = document.createElement('div');
+      div.className = `m-item${m.done ? ' done' : ''}`;
+      div.dataset.id = m.id;
+
+      /* Escape HTML to prevent XSS from user text */
+      const safe = m.text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      div.innerHTML = `
+        <div class="m-check" role="checkbox" aria-checked="${m.done}" tabindex="0">
+          <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+            <path d="M1 3.5L3.5 6L8 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="m-text">${safe}</div>
+        <button class="m-del" aria-label="Delete mission" title="Delete">×</button>
+      `;
+
+      div.querySelector('.m-check').addEventListener('click', () => toggle(m.id));
+      div.querySelector('.m-del').addEventListener('click', e => { e.stopPropagation(); remove(m.id); });
+
+      list.appendChild(div);
+    });
+  }
+
+  function add(text) {
+    const t = text.trim();
+    if (!t) return;
+    ms.push({ id:uid(), text:t, done:false, at:new Date().toISOString() });
+    App.Storage.saveMissions(ms);
+    render();
+    App.Console.log(`Mission added: "${t}"`, 'info');
+  }
+
+  function toggle(id) {
+    const m = ms.find(x => x.id === id);
+    if (!m) return;
+    m.done = !m.done;
+    App.Storage.saveMissions(ms);
+    render();
+    App.Console.log(`Mission ${m.done ? 'completed' : 'reopened'}: "${m.text}"`, m.done ? 'success' : 'info');
+  }
+
+  function remove(id) {
+    const m = ms.find(x => x.id === id);
+    if (!m) return;
+    ms = ms.filter(x => x.id !== id);
+    App.Storage.saveMissions(ms);
+    render();
+    App.Console.log(`Mission removed: "${m.text}"`, 'warn');
+  }
+
+  function clearAll() {
+    ms = [];
+    App.Storage.saveMissions(ms);
+    render();
+    App.Console.log('Mission log cleared.', 'warn');
+  }
+
+  function load() {
+    ms = App.Storage.loadMissions();
+    render();
+    App.Console.log(`Mission log loaded — ${ms.length} item(s).`, 'system');
+  }
+
+  return { add, toggle, remove, clearAll, load };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.UI — DOM BINDING & RENDER HELPERS
+   ──────────────────────────────────────────────────────────────
+   Wires all interactive elements. Provides render helpers
+   for stats and chip active states.
+══════════════════════════════════════════════════════════════ */
+App.UI = (function () {
+
+  /** renderStats — refresh the stats bar from App.State */
+  function renderStats() {
+    const byId = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    byId('stat-sessions', App.State.sessions);
+    byId('stat-focus',    `${App.State.focusMins}m`);
+    byId('stat-streak',   App.State.streak);
+  }
+
+  function setActiveMode(key) {
+    document.querySelectorAll('.mode-chip').forEach(c => c.classList.toggle('active', c.dataset.mode === key));
+  }
+
+  function setActiveDur(mins) {
+    document.querySelectorAll('.dur-chip').forEach(c => c.classList.toggle('active', Number(c.dataset.mins) === mins));
+  }
+
+  /* ─── Bind: Unlock button ─── */
+  function bindUnlock() {
+    document.getElementById('btn-unlock')?.addEventListener('click', () => {
+      App.Audio.init();
+
+      const ov = document.getElementById('unlock-overlay');
+      if (ov) { ov.classList.add('fade-out'); setTimeout(() => ov.remove(), 600); }
+
+      App.Console.log('System initialized. Audio engine online.', 'success');
+      App.Console.log('Shortcuts: [Space] start/pause · [R] reset · [S] skip', 'system');
+
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    });
+  }
+
+  /* ─── Bind: Timer buttons ─── */
+  function bindTimer() {
+    document.getElementById('btn-start')?.addEventListener('click', () => { App.Timer.toggle(); });
+    document.getElementById('btn-reset')?.addEventListener('click', () => { App.Timer.reset(); });
+    document.getElementById('btn-skip')?.addEventListener('click',  () => { App.Timer.skip(); });
+  }
+
+  /* ─── Bind: Mode chips ─── */
+  function bindModes() {
+    document.querySelectorAll('.mode-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        App.Timer.setMode(c.dataset.mode);
+        setActiveMode(c.dataset.mode);
+        setActiveDur(App.MODES[c.dataset.mode].mins);
+      });
+    });
+  }
+
+  /* ─── Bind: Duration chips ─── */
+  function bindDuration() {
+    document.querySelectorAll('.dur-chip').forEach(c => {
+      c.addEventListener('click', () => {
+        const m = Number(c.dataset.mins);
+        App.Timer.setDuration(m);
+        setActiveDur(m);
+      });
+    });
+  }
+
+  /* ─── Bind: Environment mixer sliders ─── */
+  function bindMixer() {
+    const rainSlider   = document.getElementById('rain-slider');
+    const forestSlider = document.getElementById('forest-slider');
+
+    rainSlider?.addEventListener('input', () => {
+      const pct = Number(rainSlider.value);
+      App.Audio.setVolume('rain', pct / 100);
+      const pctEl = document.getElementById('rain-pct');
+      const sub   = document.getElementById('rain-sub');
+      if (pctEl) pctEl.textContent = `${pct}%`;
+      if (sub)   sub.textContent   = pct > 0 ? 'Active' : 'Idle';
+      if (pct > 0) App.Console.log(`Rain volume → ${pct}%`, 'info');
+    });
+
+    forestSlider?.addEventListener('input', () => {
+      const pct = Number(forestSlider.value);
+      App.Audio.setVolume('forest', pct / 100);
+      const pctEl = document.getElementById('forest-pct');
+      const sub   = document.getElementById('forest-sub');
+      if (pctEl) pctEl.textContent = `${pct}%`;
+      if (sub)   sub.textContent   = pct > 0 ? 'Active' : 'Idle';
+      if (pct > 0) App.Console.log(`Forest volume → ${pct}%`, 'info');
+    });
+  }
+
+  /* ─── Bind: Mission log ─── */
+  function bindMissions() {
+    const inp    = document.getElementById('mission-inp');
+    const addBtn = document.getElementById('btn-m-add');
+    const clrBtn = document.getElementById('btn-m-clear');
+
+    function doAdd() {
+      if (!inp?.value.trim()) return;
+      App.Missions.add(inp.value);
+      inp.value = '';
+      inp.focus();
+    }
+
+    addBtn?.addEventListener('click', doAdd);
+    inp?.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); doAdd(); } });
+    clrBtn?.addEventListener('click', () => {
+      if (confirm('Clear all missions from the log?')) App.Missions.clearAll();
+    });
+  }
+
+  /* ─── Bind: Console actions ─── */
+  function bindConsole() {
+    document.getElementById('btn-con-clr')?.addEventListener('click', () => { App.Console.clear(); });
+    document.getElementById('btn-con-exp')?.addEventListener('click', () => { App.Console.exportLog(); });
+  }
+
+  /* ─── Bind: Keyboard shortcuts ─── */
+  function bindKeys() {
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'Space') { e.preventDefault(); App.Timer.toggle(); }
+      if (e.code === 'KeyR')  App.Timer.reset();
+      if (e.code === 'KeyS')  App.Timer.skip();
+    });
+  }
+
+  return {
+    renderStats, setActiveMode, setActiveDur,
+    bindUnlock, bindTimer, bindModes, bindDuration,
+    bindMixer, bindMissions, bindConsole, bindKeys,
+  };
+}());
+
+
+/* ══════════════════════════════════════════════════════════════
+   App.init — BOOTSTRAP
+   ──────────────────────────────────────────────────────────────
+   Runs on DOMContentLoaded. Sequence:
+     1. Load + display persisted stats
+     2. Load missions from storage
+     3. Initialize timer display
+     4. Set SVG ring dasharray
+     5. Bind all event handlers
+     6. Emit startup console log
+══════════════════════════════════════════════════════════════ */
+App.init = function () {
+  /* 1. Stats */
+  App.Storage.loadStats();
+  App.UI.renderStats();
+
+  /* 2. Missions */
+  App.Missions.load();
+
+  /* 3. Timer initial render */
+  App.State.remainingSecs = App.State.durationMins * 60;
+  App.State.totalSecs     = App.State.remainingSecs;
+  App.Timer.render();
+
+  /* 4. SVG ring: set dasharray so CSS transitions work */
+  const rf = document.getElementById('ring-fill');
+  if (rf) { rf.style.strokeDasharray = String(2 * Math.PI * 210); rf.style.strokeDashoffset = '0'; }
+
+  /* 5. Event handlers */
+  App.UI.bindUnlock();
+  App.UI.bindTimer();
+  App.UI.bindModes();
+  App.UI.bindDuration();
+  App.UI.bindMixer();
+  App.UI.bindMissions();
+  App.UI.bindConsole();
+  App.UI.bindKeys();
+
+  /* 6. Startup log */
+  App.Console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+  App.Console.log('  STASIS PRO v3.0.0 — Deep Focus Productivity System  ', 'system');
+  App.Console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
+  App.Console.log('Engine : Web Audio API — all sounds synthesized, zero external files', 'system');
+  App.Console.log('Storage: localStorage — missions and stats auto-persist', 'system');
+  App.Console.log(`Stats  : ${App.State.sessions} sessions · ${App.State.focusMins}m focus · streak ${App.State.streak}`, 'info');
+  App.Console.log('Awaiting initialization — click "Initialize System" to unlock audio.', 'warn');
+};
+
+/* Boot */
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', App.init);
+else App.init();
+</script>
+</body>
+</html>
